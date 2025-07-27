@@ -20,6 +20,12 @@ app.use(cors());
 // Parse JSON bodies for incoming requests
 app.use(express.json());
 
+// --- NEW: Health Check Route ---
+// This route responds to Koyeb's health checks to prove the server is alive.
+app.get('/', (req, res) => {
+  res.status(200).send('Proxy server is running and healthy!');
+});
+
 
 // --- API Route ---
 // This is the endpoint your frontend application will call
