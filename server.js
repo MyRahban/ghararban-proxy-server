@@ -8,49 +8,49 @@ require('dotenv').config(); // Load environment variables from .env file
 const app = express();
 
 // --- Configuration ---
-// The port will be provided by the hosting environment (like Koyeb) or default to 3001 for local testing.
 const PORT = process.env.PORT || 3001; 
-const API_KEY = process.env.API_KEY;
+const RAHBAN_API_KEY = process.env.RAHBAN_API_KEY;
+const GHARARBAN_API_KEY = process.env.GHARARBAN_API_KEY;
 const MODEL_NAME = 'gemini-1.5-flash-latest';
-const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
 
 // --- Middleware ---
-// Enable CORS for all routes, allowing requests from any origin
 app.use(cors());
-// Parse JSON bodies for incoming requests
 app.use(express.json());
 
-// --- NEW: Health Check Route ---
-// This route responds to Koyeb's health checks to prove the server is alive.
+// --- Health Check Route ---
 app.get('/', (req, res) => {
   res.status(200).send('Proxy server is running and healthy!');
 });
 
-
 // --- API Route ---
-// This is the endpoint your frontend application will call
 app.post('/api/generate', async (req, res) => {
-  // Check if the API key is configured on the server
-  if (!API_KEY) {
-    return res.status(500).json({ error: 'API key is not configured on the server.' });
+  // The client now sends an object with 'assistant' and 'payload'
+  const { assistant, payload } = req.body;
+
+  let apiKey;
+  // Select the correct API key based on the assistant type from the client
+  if (assistant === 'rahban') {
+    apiKey = RAHBAN_API_KEY;
+  } else if (assistant === 'ghararban') {
+    apiKey = GHARARBAN_API_KEY;
+  } else {
+    return res.status(400).json({ error: 'Assistant type not specified or invalid.' });
   }
 
+  if (!apiKey) {
+    return res.status(500).json({ error: `API key for ${assistant} is not configured on the server.` });
+  }
+
+  const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
+
   try {
-    // Forward the request body received from the client to the Google AI API
-    const response = await axios.post(GOOGLE_API_URL, req.body, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    // Forward the original payload to Google
+    const response = await axios.post(GOOGLE_API_URL, payload, {
+      headers: { 'Content-Type': 'application/json' },
     });
-
-    // Send the response from Google back to the client
     res.json(response.data);
-
   } catch (error) {
-    // Handle potential errors
-    console.error('Error proxying to Google AI:', error.response ? error.response.data : error.message);
-    
-    // Send a detailed error message back to the client
+    console.error(`Error proxying for ${assistant}:`, error.response ? error.response.data : error.message);
     if (error.response) {
       res.status(error.response.status).json({ 
         error: 'An error occurred while communicating with the Google AI API.',
