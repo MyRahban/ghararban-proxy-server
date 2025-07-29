@@ -34,6 +34,11 @@ app.post('/api/generate', async (req, res) => {
     return res.status(500).json({ error: 'API key is not configured on the server.' });
   }
 
+  // --- NEW: Log the incoming user request ---
+  // This line will print the user's prompt to your Koyeb server logs.
+  console.log("New user request received:", JSON.stringify(req.body, null, 2));
+  // -----------------------------------------
+
   try {
     // Forward the request body received from the client to the Google AI API
     const response = await axios.post(GOOGLE_API_URL, req.body, {
