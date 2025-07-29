@@ -34,10 +34,10 @@ app.post('/api/generate', async (req, res) => {
     return res.status(500).json({ error: 'API key is not configured on the server.' });
   }
 
-  // --- NEW: Log the incoming user request ---
-  // This line will print the user's prompt to your Koyeb server logs.
-  console.log("New user request received:", JSON.stringify(req.body, null, 2));
-  // -----------------------------------------
+  // Log the incoming user request
+  console.log("--- User Request Received ---");
+  console.log(JSON.stringify(req.body, null, 2));
+  console.log("-----------------------------");
 
   try {
     // Forward the request body received from the client to the Google AI API
@@ -46,6 +46,13 @@ app.post('/api/generate', async (req, res) => {
         'Content-Type': 'application/json',
       },
     });
+
+    // --- NEW: Log the outgoing AI response ---
+    // This line will print the AI's response to your Koyeb server logs.
+    console.log("--- AI Response Sent ---");
+    console.log(JSON.stringify(response.data, null, 2));
+    console.log("------------------------");
+    // ------------------------------------
 
     // Send the response from Google back to the client
     res.json(response.data);
