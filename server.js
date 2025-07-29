@@ -9,7 +9,7 @@ const app = express();
 
 // --- Configuration ---
 // The port will be provided by the hosting environment (like Koyeb) or default to 3001 for local testing.
-const PORT = process.env.PORT || 3001; 
+const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.API_KEY;
 const MODEL_NAME = 'gemini-1.5-flash-latest';
 const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
@@ -20,6 +20,11 @@ app.use(cors());
 // Parse JSON bodies for incoming requests
 app.use(express.json());
 
+// --- Health Check Route ---
+// This endpoint is for the hosting platform (Koyeb) to check if the service is alive.
+app.get('/', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Proxy server is running.' });
+});
 
 // --- API Route ---
 // This is the endpoint your frontend application will call
@@ -46,12 +51,12 @@ app.post('/api/generate', async (req, res) => {
     
     // Send a detailed error message back to the client
     if (error.response) {
-      res.status(error.response.status).json({ 
+      res.status(error.response.status).json({
         error: 'An error occurred while communicating with the Google AI API.',
-        details: error.response.data 
+        details: error.response.data
       });
     } else {
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Internal Server Error.',
         details: error.message
       });
